@@ -1,4 +1,3 @@
-import React from 'react';
 import { Clapperboard, Code2 } from 'lucide-react';
 
 export function Navbar() {
