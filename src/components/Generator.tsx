@@ -66,12 +66,11 @@ export function Generator() {
 
       // 3. Generate Image URLs (WITH THE CACHE-BUSTING FIX RESTORED)
       const getImageUrl = (imgPrompt: string, sceneNumber: number) => {
-        // We force the prompt to be unique by appending the scene number
-        const uniquePrompt = `${imgPrompt} - Scene ${sceneNumber}`;
+        const uniquePrompt = `${imgPrompt} cartoon scene ${sceneNumber}`;
         const encoded = encodeURIComponent(uniquePrompt);
         const randomSeed = Math.floor(Math.random() * 999999999);
-        const timeNow = Date.now(); // Ultimate cache buster
-        return `https://image.pollinations.ai/prompt/${encoded}?width=1024&height=576&nologo=true&seed=${randomSeed}&cb=${timeNow}`;
+      
+        return `https://image.pollinations.ai/prompt/${encoded}?width=768&height=432&nologo=true&seed=${randomSeed}`;
       };
 
       const finalScenes = generatedScenes.map((scene, index) => ({
@@ -80,23 +79,15 @@ export function Generator() {
       }));
 
       // 4. Force the browser to wait until ALL images are fully downloaded
-      await Promise.all(
-        finalScenes.map((scene) => {
-          return new Promise((resolve) => {
-            const img = new Image();
-            img.src = scene.imageUrl;
-            img.onload = resolve; // Success! Image is downloaded.
-            img.onerror = resolve; // If an image fails, just move on.
-            
-            // FALLBACK: If Pollinations takes longer than 15 seconds, stop waiting and just show the player!
-            setTimeout(resolve, 15000);
-          });
-        })
-      );
+      // 4. Show scenes immediately
+setScenes(finalScenes);
+setCurrentScene(0);
 
-      // 5. Only NOW do we show the scenes to the user!
-      setScenes(finalScenes);
-      setCurrentScene(0);
+// 5. Preload images in the background
+finalScenes.forEach((scene) => {
+  const img = new Image();
+  img.src = scene.imageUrl;
+});
 
     } catch (error) {
       console.error("Error generating cartoon:", error);
@@ -180,10 +171,12 @@ export function Generator() {
             
             <div className="aspect-video bg-slate-900 relative flex items-center justify-center overflow-hidden">
               {scenes.map((scene, index) => (
-                <img 
-                  key={scene.id}
-                  src={scene.imageUrl} 
-                  alt={`Scene ${index + 1}`} 
+                <img
+                key={scene.id}
+                src={scene.imageUrl}
+                alt={`Scene ${index + 1}`}
+                loading="lazy"
+                decoding="async" 
                   className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-500 ${
                     currentScene === index ? 'opacity-100 z-10' : 'opacity-0 z-0'
                   }`}
