@@ -89,9 +89,14 @@ finalScenes.forEach((scene) => {
   img.src = scene.imageUrl;
 });
 
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating cartoon:", error);
-      alert("Something went wrong! Make sure your Gemini API key is in the .env file.");
+    
+      if (error?.message?.includes("429")) {
+        alert("Gemini daily free quota exceeded. Try again after the quota resets.");
+      } else {
+        alert(error?.message || "Failed to generate cartoon.");
+      }
     } finally {
       setIsGenerating(false);
     }
